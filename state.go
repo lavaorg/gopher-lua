@@ -5,9 +5,10 @@ package lua
 ////////////////////////////////////////////////////////
 
 import (
+	"bufio"
 	"context"
 	"fmt"
-	"github.com/yuin/gopher-lua/parse"
+	"github.com/lavaorg/lua/parse"
 	"io"
 	"math"
 	"os"
@@ -1595,7 +1596,12 @@ func (ls *LState) Register(name string, fn LGFunction) {
 /* load and function call operations {{{ */
 
 func (ls *LState) Load(reader io.Reader, name string) (*LFunction, error) {
-	chunk, err := parse.Parse(reader, name)
+	b := bufio.NewReader(reader)
+	lfct := ls.loadCheckForFunctionProto(b)
+	if lfct != nil {
+		return lfct, nil
+	}
+	chunk, err := parse.Parse(b, name)
 	if err != nil {
 		return nil, newApiErrorE(ApiErrorSyntax, err)
 	}

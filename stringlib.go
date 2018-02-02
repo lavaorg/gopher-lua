@@ -2,9 +2,9 @@ package lua
 
 import (
 	"fmt"
+	"github.com/lavaorg/lua/pm"
+	"github.com/vmihailenco/msgpack"
 	"strings"
-
-	"github.com/yuin/gopher-lua/pm"
 )
 
 const emptyLString LString = LString("")
@@ -83,8 +83,17 @@ func strChar(L *LState) int {
 }
 
 func strDump(L *LState) int {
-	L.RaiseError("GopherLua does not support the string.dump")
-	return 0
+	//vz-add
+	f := L.CheckFunction(1)
+	if f.IsG {
+		L.RaiseError("function must be a lua function")
+	}
+	buf, err := msgpack.Marshal(proto2container(f.Proto))
+	if err != nil {
+		L.RaiseError(err.Error())
+	}
+	L.Push(LString(append(([]byte)(dumpSignature), buf...)))
+	return 1
 }
 
 func strFind(L *LState) int {
